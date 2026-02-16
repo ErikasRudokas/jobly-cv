@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+spacy[transformers]
+spacy
+python-multipart
+pymupdf
+gunicorn
+typing_extensions
