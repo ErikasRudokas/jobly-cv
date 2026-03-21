@@ -19,3 +19,8 @@ class CvParseResponse(BaseModel):
     education: List[Education]
     workExperience: List[WorkExperience]
     skills: List[str]
+    detectedLanguage: Optional[str] = None
+    translationApplied: bool = False
+    translationError: Optional[str] = None
+    originalText: Optional[str] = None
+    translatedText: Optional[str] = None

@@ -1,13 +1,46 @@
+import logging
 import spacy
 from pathlib import Path
+from googletrans import Translator
 
 from app.schemas import CvParseResponse, Education, PersonalDetails, WorkExperience
 
 MODEL_PATH = Path("model")
 nlp = spacy.load(MODEL_PATH)
+translator = Translator()
+logger = logging.getLogger(__name__)
+
+
+def _detect_and_translate_text(text: str):
+    detected_language = None
+    translation_applied = False
+    translation_error = None
+    processed_text = text
+
+    try:
+        logger.info("Starting language detection (chars=%d)", len(text))
+        detection = translator.detect(text)
+        detected_language = detection.lang
+        logger.info("Detected language: %s", detected_language)
+
+        if detected_language == "lt":
+            logger.info("Lithuanian detected; translating to English")
+            translated = translator.translate(text, src="lt", dest="en")
+            processed_text = translated.text
+            translation_applied = True
+            logger.info("Translation applied successfully")
+        else:
+            logger.info("Translation skipped for language: %s", detected_language)
+    except Exception as exc:
+        translation_error = str(exc)
+        logger.exception("Language detection/translation failed: %s", translation_error)
+
+    return processed_text, detected_language, translation_applied, translation_error
+
 
 def parse_text(text: str):
-    doc = nlp(text)
+    processed_text, detected_language, translation_applied, translation_error = _detect_and_translate_text(text)
+    doc = nlp(processed_text)
 
     personal_details = PersonalDetails()
     education = []
@@ -66,5 +99,10 @@ def parse_text(text: str):
         personalDetails=personal_details,
         education=education,
         workExperience=work_experience,
-        skills=list(set(skills))
+        skills=list(set(skills)),
+        detectedLanguage=detected_language,
+        translationApplied=translation_applied,
+        translationError=translation_error,
+        originalText=text,
+        translatedText=processed_text if translation_applied else None
     )
