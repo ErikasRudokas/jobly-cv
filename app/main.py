@@ -1,7 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from app.parser import parse_text
-from app.schemas import CvParseResponse
+from app.schemas import CvParseResponse, EmbeddingRequest, EmbeddingResponse
+from sentence_transformers import SentenceTransformer
 import io
 import fitz
 import io
@@ -16,6 +17,8 @@ app = FastAPI(
     title="CV Parser Service API",
     version="1.0.0"
 )
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     text = ""
@@ -36,3 +39,9 @@ async def parse_cv(file: UploadFile = File(...)):
 
     result = parse_text(text)
     return result
+
+
+@app.post("/api/v1/embed", response_model=EmbeddingResponse)
+async def embed_description(request: EmbeddingRequest):
+    embedding = model.encode(request.description).tolist()
+    return EmbeddingResponse(description=request.description, embedding=embedding)
