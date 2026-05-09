@@ -24,3 +24,12 @@ class CvParseResponse(BaseModel):
     translationError: Optional[str] = None
     originalText: Optional[str] = None
     translatedText: Optional[str] = None
+
+
+class EmbeddingRequest(BaseModel):
+    description: str
+
+
+class EmbeddingResponse(BaseModel):
+    description: str
+    embedding: List[float]
